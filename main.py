@@ -2,33 +2,41 @@
 from machine import Pin
 from machine import PWM
 from machine import ADC
+import time
 
 # configuration of the pins
 sensor = ADC(Pin(34))
 led = PWM(Pin(13))
-button = Pin(12, Pin.IN)
+button = Pin(12, Pin.IN, Pin.PULL_UP)
+time_c = 0
+itterator = 0
 
-def data_collection(): 
-    time_c = 0 
-    while time_c>= 6000:
-        collect()
-        if button.value() == 0: 
-            break 
-        else: 
-            time.sleep(0.1)
-            time_c += 1 
-   
+sensor.atten(3)     # ATTN_11DB
+led.freq(1000)
+f = open("data.txt", "w")
+f.write("Day is always the first!!!\n")
+f.close()
+
 def collect():
-    led.value(1)
-    time.sleep(0.5)
+    led.duty(1000)
+    time.sleep(0.01)
     data = []
     for i in range(8): 
-        data.append(ADC.read())
-    data = sum(data)/8
-    data = str(data)
-    f = open(data.txt, "w")
-    f.write(data)
+        data.append(sensor.read())
+    data = str(sum(data)/8)
+    f = open("data.txt", "a+")
+    f.write(str(itterator)+" - "+str(data)+"\n")
     f.close()
-    time.sleep(0.5)
-    led.value(0)
-    time_c = 0 
+    time.sleep(0.01)
+    led.duty(0)
+    time_c = 0
+
+while True:
+    if time_c >= 100: #TODO: was 6000
+        collect()
+        itterator += 1
+    if button.value() == 0: 
+        break 
+    time.sleep(0.01)
+    time_c += 1
+    print("I am running")
