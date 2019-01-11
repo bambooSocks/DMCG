@@ -33,7 +33,19 @@ def collect():
     time.sleep(0.01)
     led.duty(0)
     time_c = 0
-
+    
+def reference(): 
+    led.duty(500)
+    time.sleep(0.01)
+    data = []
+    for i in range(8): # 100? 
+        data.append(sensor.read())
+    f = open("data.txt", "a+")
+    f.write(" R- "+str(sum(data)/8)+"\n") #only part changed. --> "R-"
+    f.close()
+    time.sleep(0.01)
+    led.duty(0)    
+    
 mode = 0 # 0 - disabled, 1 - reference, 2 - measurement
 meas_enabled = False
 
