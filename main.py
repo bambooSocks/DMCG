@@ -13,14 +13,27 @@ blue = Pin(15, Pin.OUT)
 mode_btn = Pin(22, Pin.IN, Pin.PULL_UP) # closer button
 action_btn = Pin(23, Pin.IN, Pin.PULL_UP) # further button
 
+# global variables
 grState = 0
 time_c = 0
+mode = 0 # 0 - disabled, 1 - reference, 2 - measurement
+meas_enabled = False
 
+# initial settings of the ADC and LEDs
 sensor.atten(3)     # ATTN_11DB
+red.value(1)
+blue.value(1)
+green.value(1)
+led.duty(0)
+
+# creating a new files in the file systems
 f = open("data.txt", "w")
 f.write("Day is always the first!!!\n")
 f.close()
 
+##
+## @brief      A function used to collect data
+##
 def collect():
     led.duty(500)
     time.sleep(0.01)
@@ -30,31 +43,27 @@ def collect():
     f = open("data.txt", "a+")
     f.write(str(sum(data)/100)+"\n")
     f.close()
-    time.sleep(0.01)
     led.duty(0)
     
+##
+## @brief      A function used to collect the reference data
+##
 def reference(): 
     led.duty(500)
     time.sleep(0.01)
     data = []
-    for i in range(8): # 100? 
+    for i in range(100):
         data.append(sensor.read())
     f = open("data.txt", "a+")
-    f.write(" R- "+str(sum(data)/8)+"\n") #only part changed. --> "R-"
+    f.write("R- "+str(sum(data)/100)+"\n")
     f.close()
-    time.sleep(0.01)
     led.duty(0)    
 
-mode = 0 # 0 - disabled, 1 - reference, 2 - measurement
-meas_enabled = False
-red.value(1)
-blue.value(1)
-green.value(1)
-led.duty(0)
-
 while True:
+    # check for the current mode
     if mode == 0:
         print("mode0")
+        # if the mode button was clicked debounce it, turn the red LED off and switch to reference setup (blanking) mode
         if mode_btn.value() == 0:
             time.sleep(0.01)
             while mode_btn.value() == 0:
@@ -62,6 +71,7 @@ while True:
             red.value(1)
             mode = 1
             continue
+        # if the action button was clicked debounce it and do no other action
         if action_btn.value() == 0:
             time.sleep(0.01)
             while action_btn.value() == 0:
@@ -71,6 +81,7 @@ while True:
     # reference setup mode
     elif mode == 1:
         print("mode1")
+        # if the mode button was clicked debounce it, turn the blue LED off, the green state on and switch to measurement mode
         if mode_btn.value() == 0:
             time.sleep(0.01)
             while mode_btn.value() == 0:
@@ -79,6 +90,7 @@ while True:
             grState = 0
             blue.value(1)
             continue
+        # if the action button was clicked debounce it and run the reference setup while blinking the LED
         if action_btn.value() == 0:
             time.sleep(0.01)
             while action_btn.value() == 0:
@@ -89,6 +101,7 @@ while True:
     # measurement mode
     elif mode == 2:
         print("mode2")
+        # if the mode button was clicked debounce it, turn the green LED off, disable the measurement, clear the time counter and switch to disabled mode
         if mode_btn.value() == 0:
             time.sleep(0.01)
             while mode_btn.value() == 0:
@@ -98,14 +111,16 @@ while True:
             meas_enabled = False
             time_c = 0
             continue
+        # if the action button was clicked debounce it and enable the measurement
         if action_btn.value() == 0:
             time.sleep(0.01)
             while action_btn.value() == 0:
                 pass
             meas_enabled = True
 
+        # if enabled check for the value overpassing the 60000 counter and change the green state every second
         if meas_enabled:
-            if time_c >= 60000: #TODO: was 60000
+            if time_c >= 60000:
                 collect()
                 time_c = 0
             if time_c % 1000 == 0:
@@ -118,4 +133,5 @@ while True:
     else:
         mode = 0
 
+    # delay in order to not overload the MCU
     time.sleep(0.001)
