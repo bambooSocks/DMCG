@@ -6,7 +6,7 @@ import time
 
 # configuration of the pins
 sensor = ADC(Pin(34))
-led = PWM(Pin(13), freq=1000)
+led = PWM(Pin(13), freq=78000)
 red = Pin(14, Pin.OUT)
 green = Pin(32, Pin.OUT)
 blue = Pin(15, Pin.OUT)
@@ -35,7 +35,7 @@ f.close()
 ## @brief      A function used to collect data
 ##
 def collect():
-    led.duty(500)
+    led.duty(800)
     time.sleep(0.01)
     data = []
     for i in range(100):
@@ -49,7 +49,7 @@ def collect():
 ## @brief      A function used to collect the reference data
 ##
 def reference(): 
-    led.duty(500)
+    led.duty(800)
     time.sleep(0.01)
     data = []
     for i in range(100):
