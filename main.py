@@ -26,43 +26,60 @@ blue.value(1)
 green.value(1)
 led.duty(0)
 
-# creating a new files in the file systems
-f = open("data.txt", "w")
-f.write("Day is always the first!!!\n")
-f.close()
+##
+## @brief      Regression function
+##
+## @param      data  the data point to be evaluated
+##
+## @return     returns the evaluated value of the given datapoint
+##
+def reg(data):
+    # monday data
+    # A = -0.000884515926984929
+    # B = 2.20532387481873
+    # first tuesday data
+    # A = -0.000829282657611729
+    # B = 2.15723101966890
+    # second tuesday data
+    A = -0.000868473622808155
+    B = 2.18445659325840
+    return A*data+B
 
 ##
 ## @brief      A function used to collect data
 ##
 def collect():
-    led.duty(800)
+    led.duty(700)
     time.sleep(0.01)
     data = []
     for i in range(100):
         data.append(sensor.read())
+    data = sum(data)/100
     f = open("data.txt", "a+")
-    f.write(str(sum(data)/100)+"\n")
+    f.write(str(data)+" "+str(reg(data))+"\n")
     f.close()
+    print("Raw:", data, "OD:", reg(data))
     led.duty(0)
     
 ##
 ## @brief      A function used to collect the reference data
 ##
 def reference(): 
-    led.duty(800)
+    led.duty(700)
     time.sleep(0.01)
     data = []
     for i in range(100):
         data.append(sensor.read())
+    data = sum(data)/100
     f = open("data.txt", "a+")
-    f.write("R- "+str(sum(data)/100)+"\n")
+    f.write("R- "+str(data)+" "+str(reg(data))+"\n")
     f.close()
+    print("Raw:", data, "OD:", reg(data))
     led.duty(0)    
 
 while True:
     # check for the current mode
     if mode == 0:
-        print("mode0")
         # if the mode button was clicked debounce it, turn the red LED off and switch to reference setup (blanking) mode
         if mode_btn.value() == 0:
             time.sleep(0.01)
@@ -80,7 +97,6 @@ while True:
         red.value(0)
     # reference setup mode
     elif mode == 1:
-        print("mode1")
         # if the mode button was clicked debounce it, turn the blue LED off, the green state on and switch to measurement mode
         if mode_btn.value() == 0:
             time.sleep(0.01)
@@ -95,12 +111,12 @@ while True:
             time.sleep(0.01)
             while action_btn.value() == 0:
                 pass
+            print("saving reference")
             blue.value(1)
             reference()
         blue.value(0)
     # measurement mode
     elif mode == 2:
-        print("mode2")
         # if the mode button was clicked debounce it, turn the green LED off, disable the measurement, clear the time counter and switch to disabled mode
         if mode_btn.value() == 0:
             time.sleep(0.01)
@@ -116,11 +132,13 @@ while True:
             time.sleep(0.01)
             while action_btn.value() == 0:
                 pass
+            print("starting measurement")
             meas_enabled = True
 
         # if enabled check for the value overpassing the 60000 counter and change the green state every second
         if meas_enabled:
-            if time_c >= 60000:
+            if time_c >= 300000:
+                print("Collecting...")
                 collect()
                 time_c = 0
             if time_c % 1000 == 0:
