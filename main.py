@@ -18,6 +18,7 @@ grState = 0
 time_c = 0
 mode = 0 # 0 - disabled, 1 - reference, 2 - measurement
 meas_enabled = False
+ref = []
 
 # initial settings of the ADC and LEDs
 sensor.atten(3)     # ATTN_11DB
@@ -56,9 +57,9 @@ def collect():
         data.append(sensor.read())
     data = sum(data)/100
     f = open("data.txt", "a+")
-    f.write(str(data)+" "+str(reg(data))+"\n")
+    f.write(str(data)+" "+str(-log10(data/(sum(ref)/len(ref))))+"\n")
     f.close()
-    print("Raw:", data, "OD:", reg(data))
+    print("Raw:", data, "OD:", -log10(data/(sum(ref)/len(ref))))
     led.duty(0)
     
 ##
@@ -67,14 +68,15 @@ def collect():
 def reference(): 
     led.duty(700)
     time.sleep(0.01)
-    data = []
+    data = [](sum(ref)/len(ref))
     for i in range(100):
         data.append(sensor.read())
     data = sum(data)/100
     f = open("data.txt", "a+")
     f.write("R- "+str(data)+" "+str(reg(data))+"\n")
     f.close()
-    print("Raw:", data, "OD:", reg(data))
+    ref.append(data)
+    print("Raw:", data, "OD:", reg(data), "new ref:", sum(ref)/len(ref))
     led.duty(0)    
 
 while True:
@@ -137,7 +139,12 @@ while True:
 
         # if enabled check for the value overpassing the 60000 counter and change the green state every second
         if meas_enabled:
-            if time_c >= 300000:
+            if len(ref) == 0:
+                print("Reference not set")
+                meas_enabled = False
+                grState = 0
+                continue
+            if time_c >= 30000: #TODO: was 300000
                 print("Collecting...")
                 collect()
                 time_c = 0
