@@ -3,6 +3,7 @@ from machine import Pin
 from machine import PWM
 from machine import ADC
 import time
+from math import log10
 
 # configuration of the pins
 sensor = ADC(Pin(34))
@@ -56,10 +57,11 @@ def collect():
     for i in range(100):
         data.append(sensor.read())
     data = sum(data)/100
+    od_data = -log10(data/(sum(ref)/len(ref)))
     f = open("data.txt", "a+")
-    f.write(str(data)+" "+str(-log10(data/(sum(ref)/len(ref))))+"\n")
+    f.write(str(data)+" "+str(od_data)+"\n")
     f.close()
-    print("Raw:", data, "OD:", -log10(data/(sum(ref)/len(ref))))
+    print("Raw:", data, "OD:", od_data)
     led.duty(0)
     
 ##
@@ -68,7 +70,7 @@ def collect():
 def reference(): 
     led.duty(700)
     time.sleep(0.01)
-    data = [](sum(ref)/len(ref))
+    data = []
     for i in range(100):
         data.append(sensor.read())
     data = sum(data)/100
@@ -144,7 +146,7 @@ while True:
                 meas_enabled = False
                 grState = 0
                 continue
-            if time_c >= 30000: #TODO: was 300000
+            if time_c >= 300000: #TODO: was 300000
                 print("Collecting...")
                 collect()
                 time_c = 0
