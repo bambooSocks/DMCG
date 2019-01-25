@@ -36,15 +36,8 @@ led.duty(0)
 ## @return     returns the evaluated value of the given datapoint
 ##
 def reg(data):
-    # monday data
-    # A = -0.000884515926984929
-    # B = 2.20532387481873
-    # first tuesday data
-    # A = -0.000829282657611729
-    # B = 2.15723101966890
-    # second tuesday data
-    A = -0.000868473622808155
-    B = 2.18445659325840
+    A = 3.51358227885507
+    B = 0.220979790461345
     return A*data+B
 
 ##
@@ -57,7 +50,7 @@ def collect():
     for i in range(100):
         data.append(sensor.read())
     data = sum(data)/100
-    od_data = -log10(data/(sum(ref)/len(ref)))
+    od_data = reg(-log10(data/(sum(ref)/len(ref))))
     f = open("data.txt", "a+")
     f.write(str(data)+" "+str(od_data)+"\n")
     f.close()
@@ -75,10 +68,10 @@ def reference():
         data.append(sensor.read())
     data = sum(data)/100
     f = open("data.txt", "a+")
-    f.write("R- "+str(data)+" "+str(reg(data))+"\n")
+    f.write("R- "+str(data)+"\n")
     f.close()
     ref.append(data)
-    print("Raw:", data, "OD:", reg(data), "new ref:", sum(ref)/len(ref))
+    print("Raw:", data, "new ref:", sum(ref)/len(ref))
     led.duty(0)    
 
 while True:
@@ -146,7 +139,7 @@ while True:
                 meas_enabled = False
                 grState = 0
                 continue
-            if time_c >= 300000: #TODO: was 300000
+            if time_c >= 3000: #TODO: was 300000
                 print("Collecting...")
                 collect()
                 time_c = 0
